@@ -327,19 +327,77 @@ class Manager:
 
         print("R2API has been updated!")
 
-    # Gets mods installed without this manager
-    def get_current_mods(self):
-        if os.path.isdir(self.gamePath+"\\BepInEx\\plugins"):
-            id = self.configs.GetId()
-            config = self.configs.Read(waitforwrite=True, id=id)
-            for i in os.listdir(self.gamePath+"\\BepInEx\\plugins"):
-                if not "R2API" in i:
-                    with open(os.path.join(self.gamePath+"\\BepInEx\\plugins", i+"\\manifest.json"), "r") as file:
-                        pc = json.load(file)
+    def check_for_updates_nw(self):
+        for mod in os.listdir("./Mods"):
+            print("\n\nChecking "+mod+" for updates...")
 
-                    if not pc["name"] in config["cachedMods"]:
-                        config[pc["name"]] = pc
-            self.configs.Write(config, id)
+            with open("./Mods/"+mod+"/manifest.json", "r") as f:
+                try:
+                    mConfig = json.load(f)
+                except:
+                    f.seek(3)
+                    mConfig = json.load(f)
+
+            if "author" in mConfig:
+                print("Getting details for latest "+mod+" version...")
+
+                details = str(requests.get("https://thunderstore.io/package/"+mConfig["author"]+"/"+mod).content)[2:]
+                details = details[:len(details)-1]
+
+                version = details.split("<td>Dependency string</td>\\n        <td>")[1].split("</td>")[0].split("-")[-1]
+                print("Cached version: v"+mConfig["version_number"]+"\nLatest version: v"+version)
+                if self.outdated(mConfig["version_number"], version):
+                    if input("\n\nThere is a newer version of "+mod+". Would you like to install it? (y/n) ")[0].lower() == "y":
+                        print("Downloading "+mod+" to v"+version+"...")
+                        downloadurl = "https://thunderstore.io/package/download/"+mConfig["author"]+"/"+version
+
+                        for x in details.split("<div class=\"list-group-item flex-column align-items-start media\">"):
+                            if x == details.split("<div class=\"list-group-item flex-column align-items-start media\">")[0]: continue
+                            a, n = x.split("<a href=\"/package/")[1].split("</a>")[0].split("\">")[1].split("-")
+                            requirements.append({"author": a, "name": n})
+
+                        with open(mod+".zip", "wb+") as f:
+                            f.write(requests.get(downloadurl).content)
+
+                        print("Extracting "+name+".zip...")
+                        with ZipFile(name+".zip", "r") as zO:
+                            zO.extractall("./"+name)
+
+                        print("Standardizing directory structure...")
+                        # Make sure dir structure is correct
+                        if not os.path.isdir("./"+mod+"/plugins") and not os.path.isfile("./"+mod+"/"+mod+".dll"):
+                            if os.path.isfile("./"+mod+"/"+mod+"/"+mod+".dll"):
+                                shutil.move("./"+mod+"/"+mod+"/"+mod+".dll", "./"+mod)
+                            elif os.path.isdir("./"+mod+"/"+mod+"/plugins"):
+                                for i in os.listdir("./"+mod+"/"+mod):
+                                    shutil.move("./"+mod+"/"+mod+"/"+i, "./"+mod+"/")
+
+                        if os.path.isfile("./"+name+"/manifest.json"):
+                            with open("./Mods/"+mod+"/manifest.json", "r+") as f:
+                                try:
+                                    f.seek(0)
+                                    mConfig = json.load(f)
+                                except:
+                                    f.seek(3)
+                                    mConfig = json.load(f)
+
+                                mConfig["version_number"] = version
+                                f.seek(0)
+                                json.dump(mConfig, f)
+
+                        print("Updating plugin...")
+                        for root, dirs, files in os.walk("./Mods/"+mod):
+                            for file in files:
+                                if file.endswith(".dll"): os.remove(os.path.join(root, file))
+
+                        for root, dirs, files in os.walk("./"+mod):
+                            for file in files:
+                                if file.endswith(".dll"): shutil.move(os.path.join(root, file), os.path.join("./Mods/"+mod+"/"+root.split(os.getcwd()+"\\"+mod+"\\"), file))
+
+                        shutil.rmtree("./"+mod)
+                        os.remove("./"+mod+".zip")
+            else:
+                print("Could not resolve "+mod+"'s thunderstore url, skipping.")
 
     def install_mod(self, url):
         requirements = []
@@ -504,7 +562,7 @@ class Manager:
         with open("./configs.json", "r+") as file:
             if file.read() == "":
                 file.seek(0)
-                dc = {"gamePath": self.getGamePath(), "cachedMods": {}, "modProfiles": []}
+                dc = {"gamePath": self.getGamePath(), "modProfiles": []}
                 json.dump(dc, file, indent=4)
             else:
                 file.seek(0)
