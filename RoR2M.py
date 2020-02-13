@@ -468,7 +468,10 @@ class Manager:
             s_install_folders = [steam]
 
             with open(steam+"/config/config.vdf", "r") as file:
-                d = vdf.load(file)["InstallConfigStore"]["Software"]["valve"]["Steam"]
+                try:
+                    d = vdf.load(file)["InstallConfigStore"]["Software"]["valve"]["Steam"]
+                except:
+                    d = vdf.load(file)["InstallConfigStore"]["Software"]["Valve"]["Steam"]
 
                 base_number = 1
                 while True:
