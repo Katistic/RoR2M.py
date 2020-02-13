@@ -438,13 +438,13 @@ class Manager:
         online = self.is_online()
 
         if self.BIEP == None and online:
-            if input("BepInEx is not installed! Would you like to install it (Required for mod use)? (y/n) ")[0].lower() == "y":
+            if input("\n\nBepInEx is not installed! Would you like to install it (Required for mod use)? (y/n) ")[0].lower() == "y":
                 self.install_biep()
         elif not self.BIEP == None:
             print("BIEP Install Version: v"+self.BIEP)
 
         if self.R2API == None and online:
-            if input("R2API is not installed! Would you like to install it (Required for mod use)? (y/n) ")[0].lower() == "y":
+            if input("\n\nR2API is not installed! Would you like to install it (Required for mod use)? (y/n) ")[0].lower() == "y":
                 self.install_mod("https://thunderstore.io/package/tristanmcpherson/R2API/")
         elif not self.BIEP == None:
             print("R2API Install Version: v"+self.R2API)
@@ -453,8 +453,7 @@ class Manager:
             if input("\n\nThere is a newer version of BepInExPack. Would you like to install it? (y/n) ")[0].lower() == "y":
                 self.update_biep()
 
-        if input("Would you like to install Kat's recommended mods?\nThese mods will have little affect on gameplay and are quality of life mods. (y/n) ")[0].lower() == "y":
-            mods = ["https://thunderstore.io/package/Harb/DebugToolkit/", "https://thunderstore.io/package/JohnEdwa/RTAutoSprintEx/", "https://thunderstore.io/package/Lodington/Thiccify/", "https://thunderstore.io/package/DekuDesu/SkipWelcomeScreen/", "https://thunderstore.io/package/Kazzababe/SavedGames/", "https://thunderstore.io/package/xayfuu/EnemyHitLog/", "https://thunderstore.io/package/RyanPallesen/VanillaTweaks/", "https://thunderstore.io/package/Pickleses/TeleporterShow/", "https://thunderstore.io/package/mpawlowski/Compass/", "https://thunderstore.io/package/DekuDesu/MiniMapMod/"]
+        if input("\n\nWould you like to install Kat's recommended mods?\nThese mods will have little affect on gameplay and are quality of life mods. (y/n) ")[0].lower() == "y":
             mods = ["https://thunderstore.io/package/Harb/DebugToolkit/", "https://thunderstore.io/package/JohnEdwa/RTAutoSprintEx/", "https://thunderstore.io/package/Lodington/Thiccify/", "https://thunderstore.io/package/DekuDesu/SkipWelcomeScreen/", "https://thunderstore.io/package/Kazzababe/SavedGames/", "https://thunderstore.io/package/xayfuu/EnemyHitLog/", "https://thunderstore.io/package/RyanPallesen/VanillaTweaks/", "https://thunderstore.io/package/Pickleses/TeleporterShow/", "https://thunderstore.io/package/mpawlowski/Compass/", "https://thunderstore.io/package/DekuDesu/MiniMapMod/", "https://thunderstore.io/package/SushiDev/DropinMultiplayer/", "https://thunderstore.io/package/pixeldesu/Pingprovements/", "https://thunderstore.io/package/vis-eyth/UnmoddedClients/"]
             for mod in mods:
                 self.install_mod(mod)
