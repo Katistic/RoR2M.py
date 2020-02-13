@@ -399,7 +399,11 @@ class Manager:
             else:
                 print("Could not resolve "+mod+"'s thunderstore url, skipping.")
 
-    def install_mod(self, url):
+    def cache_and_install_mod(self, url):
+        self.cache_mod(url)
+        self.install_mod(url.split("/package/")[1].split("/")[1])
+
+    def cache_mod(self, url):
         requirements = []
 
         details = str(requests.get(url).content)[2:]
@@ -409,11 +413,12 @@ class Manager:
         version = details.split("<td>Dependency string</td>\\n        <td>")[1].split("</td>")[0].split("-")[-1]
 
         print("\n\nGetting details for "+name+" v"+version+" install...")
-        if os.path.isdir(self.gamePath+"\\BepInEx\\plugins\\"+name):
-            print(name+" is already installed.")
+        if os.path.isdir("./Mods/"+name):
+            print(name+" is already cached.")
             return
 
-        downloadurl = url.split("/package/")[0]+"/package/"+"download/"+url.split("/package/")[1]+version
+        downloadurl = url.split("/package/")[0]+"/package/"+"download/"+url.split("/package/")[1]
+        downloadurl += version if downloadurl.endswith("/") else "/"+version
 
         for x in details.split("<div class=\"list-group-item flex-column align-items-start media\">"):
             if x == details.split("<div class=\"list-group-item flex-column align-items-start media\">")[0]: continue
@@ -429,6 +434,7 @@ class Manager:
             zO.extractall("./"+name)
 
         # Make sure dir structure is correct
+        print("Standardizing directory structure...")
         if not os.path.isdir("./"+name+"/plugins") and not os.path.isfile("./"+name+"/"+name+".dll"):
             if os.path.isfile("./"+name+"/"+name+"/"+name+".dll"):
                 shutil.move("./"+name+"/"+name+"/"+name+".dll", "./"+name)
@@ -453,41 +459,72 @@ class Manager:
                     file.truncate(0)
                     json.dump(config, file)
 
-        if os.path.isdir("./"+name+"/plugins"):
-            print("Merging with "+self.gamePath+"/BepInEx...")
-
-            for i in os.listdir("./"+name+"/"):
-                if os.path.isfile("./"+name+"/"+i):
-                    try:
-                        shutil.move("./"+name+"/"+i, self.gamePath+"/BepInEx/")
-                    except Exception as e:
-                        print("Failed to move "+i+", "+str(e))
-                elif os.path.isdir("./"+name+"/"+i):
-                    if not os.path.isdir(self.gamePath+"/BepInEx/"+i): os.mkdir(self.gamePath+"/BepInEx/"+i)
-
-                    for x in os.listdir("./"+name+"/"+i):
-                        try:
-                            shutil.move("./"+name+"/"+i+"/"+x, self.gamePath+"/BepInEx/"+i+"/"+x)
-                        except Exception as e:
-                            print("Failed to move "+i+"/"+x+", "+str(e))
-
-            shutil.rmtree("./"+name)
-        else:
-            print("Merging with "+self.gamePath+"\\BepInEx\\plugins...")
-            shutil.move(os.getcwd()+"\\"+name, self.gamePath+"\\BepInEx\\plugins")
-
-        print("Clearing junk...")
+        print("Caching "+name+"...")
+        shutil.move("./"+name, "./Mods/"+name)
         os.remove("./"+name+".zip")
 
-        print("Installing requirements...")
+        print("Caching requirements...")
         for req in requirements:
             if req["name"] == "BepInExPack": continue
-            if os.path.isdir(self.gamePath+"\\BepInEx\\plugins\\"+req["name"]):
+            if os.path.isdir("./Mods/"+req["name"]):
                 print(req["name"]+" is already installed.")
             else:
-                self.install_mod("https://thunderstore.io/package/"+req["author"]+"/"+req["name"]+"/")
+                self.cache_mod("https://thunderstore.io/package/"+req["author"]+"/"+req["name"])
 
-        print(name+" v"+version+" has been successfully installed.")
+        print(name+" v"+version+" has been added to cache.")
+
+    def install_mod(self, name):
+        requirements = []
+
+        if name == "BepInExPack": return
+        if not os.path.isdir(self.gamePath+"/BepInEx/plugins"): os.mkdir(self.gamePath+"/BepInEx/plugins")
+
+        if not name in os.listdir(self.gamePath+"/BepInEx/plugins"):
+            for mod in os.listdir("./Mods"):
+                if mod == name:
+                    if "plugins" in os.listdir("./Mods/"+name):
+                        print("Merging with "+self.gamePath+"/BepInEx...")
+
+                        for i in os.listdir("./Mods/"+name+"/"):
+                            if os.path.isfile("./Mods/"+name+"/"+i):
+                                print("Merging with "+self.gamePath+"\\BepInEx\\plugins...")
+                                try:
+                                    shutil.copy("./Mods/"+name+"/"+i, self.gamePath+"/BepInEx/"+i)
+                                except Exception as e:
+                                    print("Failed to move "+i+", "+str(e))
+                            elif os.path.isdir("./Mods/"+name+"/"+i):
+                                if not os.path.isdir(self.gamePath+"/BepInEx/"+i): os.mkdir(self.gamePath+"/BepInEx/"+i)
+
+                                for x in os.listdir("./Mods/"+name+"/"+i):
+                                    try:
+                                        if os.path.isfile("./Mods/"+name+"/"+i+"/"+x): shutil.copy("./Mods/"+name+"/"+i+"/"+x, self.gamePath+"/BepInEx/"+i+"/"+x)
+                                        else: shutil.copytree("./Mods/"+name+"/"+i+"/"+x, self.gamePath+"/BepInEx/"+i+"/"+x)
+                                    except Exception as e:
+                                        print("Failed to move "+i+"/"+x+", "+str(e))
+                    else:
+                        print("Merging with "+self.gamePath+"\\BepInEx\\plugins...")
+                        shutil.copytree(os.getcwd()+"\\Mods\\"+name, self.gamePath+"\\BepInEx\\plugins\\"+name)
+
+                    print("Installing requirements...")
+                    with open("./Mods/"+name+"/manifest.json", "r") as file:
+                        try:
+                            mConfig = json.load(file)
+                        except:
+                            file.seek(3)
+                            mConfig = json.load(file)
+
+                    for dependency in mConfig["dependencies"]:
+                        requirements.append(dependency.split("-")[-2])
+
+                    for req in requirements:
+                        if req == "BepInExPack": continue
+                        if os.path.isdir(self.gamePath+"\\BepInEx\\plugins\\"+req):
+                            print(req+" is already installed.")
+                        else:
+                            self.install_mod(req)
+
+                    print(name+" has been successfully installed.")
+        else: print(name+" is already installed.")
 
     def launch_nw(self):
 
@@ -503,7 +540,7 @@ class Manager:
 
         if self.R2API == None and online:
             if input("\n\nR2API is not installed! Would you like to install it (Required for mod use)? (y/n) ")[0].lower() == "y":
-                self.install_mod("https://thunderstore.io/package/tristanmcpherson/R2API/")
+                self.cache_and_install_mod("https://thunderstore.io/package/tristanmcpherson/R2API/")
         elif not self.BIEP == None:
             print("R2API Install Version: v"+self.R2API)
 
@@ -511,11 +548,12 @@ class Manager:
             if input("\n\nThere is a newer version of BepInExPack. Would you like to install it? (y/n) ")[0].lower() == "y":
                 self.update_biep()
 
+        self.check_for_updates_nw()
+
         if input("\n\nWould you like to install Kat's recommended mods?\nThese mods will have little affect on gameplay and are quality of life mods. (y/n) ")[0].lower() == "y":
             mods = ["https://thunderstore.io/package/Harb/DebugToolkit/", "https://thunderstore.io/package/JohnEdwa/RTAutoSprintEx/", "https://thunderstore.io/package/Lodington/Thiccify/", "https://thunderstore.io/package/DekuDesu/SkipWelcomeScreen/", "https://thunderstore.io/package/Kazzababe/SavedGames/", "https://thunderstore.io/package/xayfuu/EnemyHitLog/", "https://thunderstore.io/package/RyanPallesen/VanillaTweaks/", "https://thunderstore.io/package/Pickleses/TeleporterShow/", "https://thunderstore.io/package/mpawlowski/Compass/", "https://thunderstore.io/package/DekuDesu/MiniMapMod/", "https://thunderstore.io/package/SushiDev/DropinMultiplayer/", "https://thunderstore.io/package/pixeldesu/Pingprovements/", "https://thunderstore.io/package/IFixYourRoR2Mods/DiscordRichPresence/", "https://thunderstore.io/package/TheRealElysium/EmptyChestsBeGone/", "https://thunderstore.io/package/kookehs/StatsDisplay/"] # Broken "https://thunderstore.io/package/vis-eyth/UnmoddedClients/", "https://thunderstore.io/package/RyanPallesen/AssortedSkins/", https://thunderstore.io/package/felixire/BUT_IT_WAS_ME_DIO/
             for mod in mods:
-                self.install_mod(mod)
-
+                self.cache_and_install_mod(mod)
 
     def getGamePath(self):
         if os.path.isfile("C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Steam/Steam.lnk"):
@@ -602,9 +640,6 @@ class Manager:
                         self.R2API = f["version_number"]
             elif os.path.isfile(self.gamePath+"/BepInEx/monomod/Assembly-CSharp.R2API.mm.dll"):
                 self.R2API = "0.0.0.0"
-
-        # Get mods installed without this manager
-        self.get_current_mods()
 
 if __name__ == "__main__":
     qa = QApplication(sys.argv)
