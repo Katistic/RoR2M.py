@@ -350,7 +350,7 @@ class Manager:
         name = url.split("/package/")[1].split("/")[1]
         version = details.split("<td>Dependency string</td>\\n        <td>")[1].split("</td>")[0].split("-")[-1]
 
-        print("Getting details for "+name+" v"+version+" install...")
+        print("\n\nGetting details for "+name+" v"+version+" install...")
         if os.path.isdir(self.gamePath+"\\BepInEx\\plugins\\"+name):
             print(name+" is already installed.")
             return
@@ -454,7 +454,7 @@ class Manager:
                 self.update_biep()
 
         if input("\n\nWould you like to install Kat's recommended mods?\nThese mods will have little affect on gameplay and are quality of life mods. (y/n) ")[0].lower() == "y":
-            mods = ["https://thunderstore.io/package/Harb/DebugToolkit/", "https://thunderstore.io/package/JohnEdwa/RTAutoSprintEx/", "https://thunderstore.io/package/Lodington/Thiccify/", "https://thunderstore.io/package/DekuDesu/SkipWelcomeScreen/", "https://thunderstore.io/package/Kazzababe/SavedGames/", "https://thunderstore.io/package/xayfuu/EnemyHitLog/", "https://thunderstore.io/package/RyanPallesen/VanillaTweaks/", "https://thunderstore.io/package/Pickleses/TeleporterShow/", "https://thunderstore.io/package/mpawlowski/Compass/", "https://thunderstore.io/package/DekuDesu/MiniMapMod/", "https://thunderstore.io/package/SushiDev/DropinMultiplayer/", "https://thunderstore.io/package/pixeldesu/Pingprovements/", "https://thunderstore.io/package/vis-eyth/UnmoddedClients/"]
+            mods = ["https://thunderstore.io/package/Harb/DebugToolkit/", "https://thunderstore.io/package/JohnEdwa/RTAutoSprintEx/", "https://thunderstore.io/package/Lodington/Thiccify/", "https://thunderstore.io/package/DekuDesu/SkipWelcomeScreen/", "https://thunderstore.io/package/Kazzababe/SavedGames/", "https://thunderstore.io/package/xayfuu/EnemyHitLog/", "https://thunderstore.io/package/RyanPallesen/VanillaTweaks/", "https://thunderstore.io/package/Pickleses/TeleporterShow/", "https://thunderstore.io/package/mpawlowski/Compass/", "https://thunderstore.io/package/DekuDesu/MiniMapMod/", "https://thunderstore.io/package/SushiDev/DropinMultiplayer/", "https://thunderstore.io/package/pixeldesu/Pingprovements/", "https://thunderstore.io/package/IFixYourRoR2Mods/DiscordRichPresence/", "https://thunderstore.io/package/RyanPallesen/AssortedSkins/", "https://thunderstore.io/package/felixire/BUT_IT_WAS_ME_DIO/", "https://thunderstore.io/package/kookehs/StatsDisplay/"] # Broken "https://thunderstore.io/package/vis-eyth/UnmoddedClients/",
             for mod in mods:
                 self.install_mod(mod)
 
