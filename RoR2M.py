@@ -454,7 +454,7 @@ class Manager:
                 self.update_biep()
 
         if input("\n\nWould you like to install Kat's recommended mods?\nThese mods will have little affect on gameplay and are quality of life mods. (y/n) ")[0].lower() == "y":
-            mods = ["https://thunderstore.io/package/Harb/DebugToolkit/", "https://thunderstore.io/package/JohnEdwa/RTAutoSprintEx/", "https://thunderstore.io/package/Lodington/Thiccify/", "https://thunderstore.io/package/DekuDesu/SkipWelcomeScreen/", "https://thunderstore.io/package/Kazzababe/SavedGames/", "https://thunderstore.io/package/xayfuu/EnemyHitLog/", "https://thunderstore.io/package/RyanPallesen/VanillaTweaks/", "https://thunderstore.io/package/Pickleses/TeleporterShow/", "https://thunderstore.io/package/mpawlowski/Compass/", "https://thunderstore.io/package/DekuDesu/MiniMapMod/", "https://thunderstore.io/package/SushiDev/DropinMultiplayer/", "https://thunderstore.io/package/pixeldesu/Pingprovements/", "https://thunderstore.io/package/IFixYourRoR2Mods/DiscordRichPresence/", "https://thunderstore.io/package/felixire/BUT_IT_WAS_ME_DIO/", "https://thunderstore.io/package/kookehs/StatsDisplay/"] # Broken "https://thunderstore.io/package/vis-eyth/UnmoddedClients/", "https://thunderstore.io/package/RyanPallesen/AssortedSkins/"
+            mods = ["https://thunderstore.io/package/Harb/DebugToolkit/", "https://thunderstore.io/package/JohnEdwa/RTAutoSprintEx/", "https://thunderstore.io/package/Lodington/Thiccify/", "https://thunderstore.io/package/DekuDesu/SkipWelcomeScreen/", "https://thunderstore.io/package/Kazzababe/SavedGames/", "https://thunderstore.io/package/xayfuu/EnemyHitLog/", "https://thunderstore.io/package/RyanPallesen/VanillaTweaks/", "https://thunderstore.io/package/Pickleses/TeleporterShow/", "https://thunderstore.io/package/mpawlowski/Compass/", "https://thunderstore.io/package/DekuDesu/MiniMapMod/", "https://thunderstore.io/package/SushiDev/DropinMultiplayer/", "https://thunderstore.io/package/pixeldesu/Pingprovements/", "https://thunderstore.io/package/IFixYourRoR2Mods/DiscordRichPresence/", "https://thunderstore.io/package/TheRealElysium/EmptyChestsBeGone/", "https://thunderstore.io/package/kookehs/StatsDisplay/"] # Broken "https://thunderstore.io/package/vis-eyth/UnmoddedClients/", "https://thunderstore.io/package/RyanPallesen/AssortedSkins/", https://thunderstore.io/package/felixire/BUT_IT_WAS_ME_DIO/
             for mod in mods:
                 self.install_mod(mod)
 
@@ -534,9 +534,14 @@ class Manager:
 
             if os.path.isfile(self.gamePath+"/BepInEx/manifest.json") and os.path.isfile(self.gamePath+"/BepInEx/monomod/Assembly-CSharp.R2API.mm.dll"):
                 with open(self.gamePath+"/BepInEx/manifest.json", "r+") as f:
-                    f.seek(3) # Avoid gunk at start of file
-                    f = json.load(f)
-                    self.R2API = f["version_number"]
+                    try:
+                        f.seek(3) # Avoid gunk at start of file
+                        f = json.load(f)
+                        self.R2API = f["version_number"]
+                    except:
+                        f.seek(0) # Avoid gunk at start of file
+                        f = json.load(f)
+                        self.R2API = f["version_number"]
             elif os.path.isfile(self.gamePath+"/BepInEx/monomod/Assembly-CSharp.R2API.mm.dll"):
                 self.R2API = "0.0.0.0"
 
